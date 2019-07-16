@@ -1,0 +1,96 @@
+#include <iostream>
+#include<cstdio>
+#include<string.h>
+#include<algorithm>
+
+using namespace std;
+
+#define N 50
+//定义goods结构体，用于表明物品重量和价值 
+struct goods {
+	int wight[N][N];//物品重量
+	double value[N];//物品价值
+};
+
+int n, num, cw[N], C[N];    //物品个数,维度, 当前重量,背包容量
+double a, bestValue=0, cv;  //整个大组的最优解，最大价值，当前价值
+int X[N], cx[N];            //最终存储状态，当前存储状态
+FILE* fp;                   //文件指针 
+struct goods goods[N];      //goods结构体 
+
+double BackTrack(int i) {
+	
+	//判断是否到达叶子节点
+	if (i > n - 1) {
+		//到了叶子节点，判断当前价值是否大于最大价值
+		if (bestValue < cv) {
+			//大于的话，更新存储路径和最大价值
+			for (int k = 0; k < n; k++)
+				X[k] = cx[k];//存储最优路径
+			bestValue = cv;
+		}
+
+		return bestValue;
+	}
+	int k = 0;
+	for (k = 0; k < num; k++) {
+		//约束：当前物品的重量加上wight[k][i]的重量大于 C[k]，
+		if (cw[k] + goods[0].wight[k][i] > C[k]) {//判断是否超过约束条件，超过的话 k小于num
+			break;
+		}
+	}
+
+	//判断k是否等于num，如果k小于num，说明第k行数据不满足约束条件
+	if (k == num) {
+		cx[i] = 1;//装入背包
+		cv += goods[0].value[i];//更新价值
+		for (k = 0; k < num; ++k) {
+			cw[k] += goods[0].wight[k][i];//更新每一个属性的重量
+		}
+
+		BackTrack((i + 1));//递归深度搜索
+		
+		for (k = 0; k < num; ++k) {
+			cw[k] -= goods[0].wight[k][i];//回溯
+		}
+		cv -= goods[0].value[i];
+	}
+
+	cx[i] = 0;
+	BackTrack(i + 1);
+
+	return bestValue;
+}
+
+
+int main()
+{
+	fp = fopen("C:\\Users\\Administrator\\Desktop\\测试数据.txt", "rt");
+
+	fscanf(fp, "%d %d %lf", &n, &num, &a);//物品数量  
+
+	for (int i = 0; i < n; i++) {
+		fscanf(fp, "%lf", &goods[0].value[i]);
+	}
+	for (int k = 0; k < num; k++) {
+		for (int j = 0; j < n; j++) {
+			fscanf(fp, "%d", &goods[0].wight[k][j]);
+		}
+	}
+	//背包容量
+	for (int i = 0; i < num; i++) {
+		fscanf(fp, "%d", &C[i]);
+	}
+
+	//调用回溯法
+	double sum3 = BackTrack(0);
+
+	//输出
+	printf("回溯法求解0/1背包问题:\nX=[");
+	for (int i = 0; i < n; i++)
+		cout << X[i] << "  ";//输出所求X[n]矩阵
+	printf("]   装入总价值%lf\n", sum3);
+
+	return 0;
+}
+
